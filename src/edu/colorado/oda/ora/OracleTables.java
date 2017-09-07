@@ -5,35 +5,26 @@ import java.io.PrintWriter;
 import java.sql.*;
 
 public class OracleTables {
-	
+
+	// Please modify for the CIW connection parameters
 	private static String url = "jdbc:oracle:thin:@123.123.123.123:1521:xe";
 	private static String username = "oda";
 	private static String password = "oda_pwd";
+
+	// Set this flag to false if you don't need the username and password
 	private static boolean connect_with_username = true;
-
-	
-	
-	public static String padRight(String s, int n) {
-		return String.format("%1$-" + n + "s", s);  
-	}
-
-	public static String padLeft(String s, int n) {
-		return String.format("%1$" + n + "s", s);  
-	}
-
 
 	public static void main(String args[]) throws FileNotFoundException {
 
-		
+
 		Connection con;
 		//String query = "select COLUMN_NAME, DATA_TYPE, DATA_LENGTH, NULLABLE from USER_TAB_COLUMNS where TABLE_NAME='XXX' order by column_id";
 		String query = "select * from XXX where ROWNUM <= 1";
 		Statement stmt;
-		
+
 
 		try {
 			Class.forName("oracle.jdbc.driver.OracleDriver");
-
 		} catch(java.lang.ClassNotFoundException e) {
 			System.err.print("ClassNotFoundException: "); 
 			System.err.println(e.getMessage());
@@ -51,7 +42,7 @@ public class OracleTables {
 				{
 					con = DriverManager.getConnection(url);
 				}
-				
+
 
 				stmt = con.createStatement();              
 
@@ -59,7 +50,7 @@ public class OracleTables {
 				ResultSetMetaData rsmd;
 
 
-				String[] tables = { "EXPORT_TABLE",
+				String[] tables = {
 						"cu_adm_main_final", 
 						"ps_d_admit_type", 
 						"ps_d_class", 
@@ -100,29 +91,11 @@ public class OracleTables {
 						out.println("Table not found\n\n");
 						continue;
 					}
-					
+
 					rsmd = rs.getMetaData();
 
 
 					PrintColumnTypes.printColTypes(rsmd, out);
-					/*
-					int numberOfColumns = rsmd.getColumnCount();
-					for (int i = 1; i <= numberOfColumns; i++) {
-						//if (i > 1) System.out.print(",  ");
-						String columnName = rsmd.getColumnName(i);
-						out.print(padRight(columnName, padding));
-					}
-					out.println("\n--------------------------------------------------------------------------------------------------------------------------");
-
-					while (rs.next()) {
-						for (int i = 1; i <= numberOfColumns; i++) {
-							//	if (i > 1) System.out.print(",  ");
-							String columnValue = rs.getString(i);
-							out.print(padRight(columnValue, padding));
-						}
-						out.println("");  
-					}
-*/
 					out.println("");  
 					out.println("");  
 				}
@@ -140,6 +113,11 @@ class PrintColumnTypes  {
 	public static String padRight(String s, int n) {
 		return String.format("%1$-" + n + "s", s);  
 	}
+
+	public static String padLeft(String s, int n) {
+		return String.format("%1$" + n + "s", s);  
+	}
+
 	private static int padding = 30;
 	public static void printColTypes(ResultSetMetaData rsmd, PrintWriter out)
 			throws SQLException {
