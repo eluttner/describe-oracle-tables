@@ -5,6 +5,14 @@ import java.io.PrintWriter;
 import java.sql.*;
 
 public class OracleTables {
+	
+	private static String url = "jdbc:oracle:thin:@123.123.123.123:1521:xe";
+	private static String username = "oda";
+	private static String password = "oda_pwd";
+	private static boolean connect_with_username = true;
+
+	
+	
 	public static String padRight(String s, int n) {
 		return String.format("%1$-" + n + "s", s);  
 	}
@@ -16,11 +24,12 @@ public class OracleTables {
 
 	public static void main(String args[]) throws FileNotFoundException {
 
-		String url = "jdbc:oracle:thin:@123.123.123.123:1521:xe";
+		
 		Connection con;
-		String query = "select COLUMN_NAME, DATA_TYPE, DATA_LENGTH, NULLABLE from USER_TAB_COLUMNS where TABLE_NAME='XXX' order by column_id";
+		//String query = "select COLUMN_NAME, DATA_TYPE, DATA_LENGTH, NULLABLE from USER_TAB_COLUMNS where TABLE_NAME='XXX' order by column_id";
+		String query = "select * from XXX where ROWNUM <= 1";
 		Statement stmt;
-		int padding = 30;
+		
 
 		try {
 			Class.forName("oracle.jdbc.driver.OracleDriver");
@@ -34,7 +43,15 @@ public class OracleTables {
 
 			try(  PrintWriter out = new PrintWriter( "tables.txt" )  ){
 
-				con = DriverManager.getConnection(url, "oda", "oda_pwd");
+				if (connect_with_username)
+				{
+					con = DriverManager.getConnection(url, username, password);	
+				}
+				else
+				{
+					con = DriverManager.getConnection(url);
+				}
+				
 
 				stmt = con.createStatement();              
 
@@ -42,7 +59,7 @@ public class OracleTables {
 				ResultSetMetaData rsmd;
 
 
-				String[] tables = { 
+				String[] tables = { "EXPORT_TABLE",
 						"cu_adm_main_final", 
 						"ps_d_admit_type", 
 						"ps_d_class", 
@@ -74,16 +91,22 @@ public class OracleTables {
 				"era_f_pt_terms_cond" };   
 				for (String table: tables) { 
 					String query_table = query.replace("XXX", table.toUpperCase());
-
-					rs = stmt.executeQuery(query_table);
-					rsmd = rs.getMetaData();
-
-					//PrintColumnTypes.printColTypes(rsmd);
 					out.println("======================================");
 					out.println("== TABLE: " + table);
 					out.println("======================================");
-					int numberOfColumns = rsmd.getColumnCount();
+					try {
+						rs = stmt.executeQuery(query_table);	
+					} catch(SQLException ex) {
+						out.println("Table not found\n\n");
+						continue;
+					}
+					
+					rsmd = rs.getMetaData();
 
+
+					PrintColumnTypes.printColTypes(rsmd, out);
+					/*
+					int numberOfColumns = rsmd.getColumnCount();
 					for (int i = 1; i <= numberOfColumns; i++) {
 						//if (i > 1) System.out.print(",  ");
 						String columnName = rsmd.getColumnName(i);
@@ -99,6 +122,7 @@ public class OracleTables {
 						}
 						out.println("");  
 					}
+*/
 					out.println("");  
 					out.println("");  
 				}
@@ -113,15 +137,18 @@ public class OracleTables {
 }
 
 class PrintColumnTypes  {
-
-	public static void printColTypes(ResultSetMetaData rsmd)
+	public static String padRight(String s, int n) {
+		return String.format("%1$-" + n + "s", s);  
+	}
+	private static int padding = 30;
+	public static void printColTypes(ResultSetMetaData rsmd, PrintWriter out)
 			throws SQLException {
 		int columns = rsmd.getColumnCount();
 		for (int i = 1; i <= columns; i++) {
-			int jdbcType = rsmd.getColumnType(i);
-			String name = rsmd.getColumnTypeName(i);
-			System.out.print("Column " + i + " is JDBC type " + jdbcType);
-			System.out.println(", which the DBMS calls " + name);
+			//int jdbcType = rsmd.getColumnType(i);
+			String typeName = rsmd.getColumnTypeName(i);
+			String columnName = rsmd.getColumnName(i);
+			out.println(padRight(columnName, 20) + padRight(typeName, padding));
 		}
 	}
 }
